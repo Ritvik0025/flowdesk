@@ -1,24 +1,36 @@
 import React, { useState } from 'react';
+import API from '../services/api';
+import { useNavigate } from 'react-router-dom';
+
 
 function Login() {
+  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+const handleLogin = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+  if (!email || !password) {
+    setError('Please fill in all fields');
+    return;
+  }
 
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    setLoading(true);
-    // API call will come later when backend is ready
-    setTimeout(() => setLoading(false), 1000);
-  };
+  setLoading(true);
+  try {
+    const response = await API.post('/api/auth/login', { email, password });
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('name', response.data.name);
+    localStorage.setItem('email', response.data.email);
+    navigate('/dashboard');
+  } catch (err: any) {
+    setError('Invalid email or password');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">

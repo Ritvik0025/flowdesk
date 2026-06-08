@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
+import API from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 function Register() {
+  const navigate = useNavigate();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -8,29 +11,36 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleRegister = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
+ const handleRegister = async (e: React.FormEvent) => {
+  e.preventDefault();
+  setError('');
 
-    if (!name || !email || !password || !confirm) {
-      setError('Please fill in all fields');
-      return;
-    }
+  if (!name || !email || !password || !confirm) {
+    setError('Please fill in all fields');
+    return;
+  }
+  if (password !== confirm) {
+    setError('Passwords do not match');
+    return;
+  }
+  if (password.length < 6) {
+    setError('Password must be at least 6 characters');
+    return;
+  }
 
-    if (password !== confirm) {
-      setError('Passwords do not match');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      return;
-    }
-
-    setLoading(true);
-    // API call will come later when backend is ready
-    setTimeout(() => setLoading(false), 1000);
-  };
+  setLoading(true);
+  try {
+    const response = await API.post('/api/auth/register', { name, email, password });
+    localStorage.setItem('token', response.data.token);
+    localStorage.setItem('name', response.data.name);
+    localStorage.setItem('email', response.data.email);
+    navigate('/dashboard');
+  } catch (err: any) {
+    setError('Email already exists');
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-light">
